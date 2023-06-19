@@ -42,5 +42,11 @@ class function:
         y = s - k + 1
         return y
 
+    def func_3(self, x, dimension):
+        s = 0
+        for j in range(dimension):
+            s += x[j] ** 2
+        return s
+
     def func_other(self, x, dimension):
         print("function other")

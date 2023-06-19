@@ -16,7 +16,7 @@ class MqhoaOriginal:
         :param VRmax:定义域上界
         :param varargin:调用func函数ID
         """
-        self.repeat = 1  # 重复计算次数
+        self.repeat = 2  # 重复计算次数
         self.DIM = Dimension  # 目标函数维度
         self.sigmaMin = 0.000001  # 最小尺度
         self.groupNum = Particle_Number  # 高斯采样区域数目，即k值
@@ -100,11 +100,11 @@ class MqhoaOriginal:
                 print(
                     f'sigma={sigma}, best={np.min(funcV)}, evolution time={evolutiontime}, time={time.time() - start_time} ')
             # 尺度迭代结束
-            self.tot_time[i] = time.time() - start_time
+            self.tot_time[0, i] = time.time() - start_time
             global_min = np.min(funcV)
             index_min = np.argmin(funcV)
-            self.gbestV[i] = global_min
-            self.gfe[i] = evolutiontime
+            self.gbestV[0, i] = global_min
+            self.gfe[0, i] = evolutiontime
             print(
                 f'Func=f{self.funcNum},No.{i} run,DIM={self.DIM},Global minimum={global_min},Fes={evolutiontime},time={time.time() - start_time}')
         # 重复计算
@@ -120,6 +120,6 @@ groupNum = 40
 minDomain = -100
 maxDomain = 100
 maxFE = (1e4 * DIM)
-funNo = 2
+funNo = 3
 mqhoa_original = MqhoaOriginal(DIM, groupNum, maxFE, minDomain, maxDomain, funNo)
 mqhoa_original.MQHOA()

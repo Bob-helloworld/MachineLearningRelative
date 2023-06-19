@@ -91,7 +91,7 @@ class SA:
         print(f"F={f_best}, x={self.x[idx]}, y={self.y[idx]}")
 
 
-sa = SA(func2)
+sa = SA(func)
 sa.run()
 
 plt.plot(sa.history['T'], sa.history['f'])

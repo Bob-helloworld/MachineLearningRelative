@@ -1,5 +1,6 @@
 import math
 import random
+import time
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -37,6 +38,7 @@ def near_center(data, centers):
     near_cen = np.argmin(dist, 1)
     return near_cen, dist
 
+
 def target_function(near_cen, dist):
     target_func = 0
     # 每个点距离自己类别中心点的距离之和
@@ -45,55 +47,68 @@ def target_function(near_cen, dist):
         # print("dest_func is " + str(target_func))
     return target_func
 
+
 # 使用kmeans聚类
-def multiscale_diffusion_clustering(data, k):
+def multiscale_diffusion_clustering(data, k, alpha, d_min, run_times):
     # step 1: init. centers
-    np.random.seed(2022)
-    centers = np.random.choice(np.arange(-5, 5, 0.1), (k, 2))  # 随机产生k个质心
-    near_cen = [0]
+    seed = int(time.time())
+    np.random.seed(seed)
+    random_centers = data.iloc[np.random.choice(data.shape[0], size=k, replace=False), :]  # 随机产生k个质心
+    centers = np.array(random_centers)
     # step 2: 点归属
     near_cen, dist = near_center(data, centers)
     # step 3：计算系统浓度
     density = target_function(near_cen, dist)
     # 选择数据集样本点之间的最大欧式距离作为初始扩散尺度,
-    d = np.argmax(dist)
+    d = np.max(distance(data, np.array(data)))
     best_centers = centers
     best_near_cen = near_cen
     best_dist = dist
-    while d > 0.01:
-        for i in range(100):  # 最多做100次迭代
+    # print(f"random_centers={random_centers}, \ndist_0={d}")
+    while d > d_min:
+        for i in range(run_times):
             # step 4：生成高斯随机数
+            seed = int(time.time())
+            np.random.seed(seed)
             random_number = np.random.normal(0, 1, [len(centers), 2])
             # step 5：簇的扩散
             new_centers = centers + d * random_number
-            print(f"random_number={random_number}, \nnew_centers={new_centers} , \nbest_centers={best_centers}")
+            # print(f"random_number={random_number}, \nnew_centers={new_centers} , \nbest_centers={best_centers}")
             # step 6：计算比较浓度的变化
-            new_near_cen, new_dist = near_center(data, centers)
+            new_near_cen, new_dist = near_center(data, new_centers)
             new_density = target_function(new_near_cen, new_dist)
+            print(f"d={d}, \nnew_density={new_density} , \nbest_centers={best_centers}")
             # 若样本点类别不在发生改变，退出循环
             if new_density < density:
                 density = new_density
                 best_centers = new_centers
                 best_near_cen = new_near_cen
                 best_dist = new_dist
-        d = 0.3 * d
+        d = alpha * d
+        centers = best_centers
     return best_centers, best_near_cen, best_dist
 
 
 if __name__ == '__main__':
-    path = 'D:\\GitHubProject\\MachineLearningRelative\\SA_KMeans\多尺度扩散聚类\\testdata.txt'
+    path = 'testdata.txt'
     data = read_data(path)
-    # step1 先进行一次kmeans聚类获得初始解并获得目标函数值（每个点距离自己类别中心点的距离之和）
-    centers, near_cen, dist = multiscale_diffusion_clustering(data, 4)
+    # 运动点个数
+    k = 4
+    # 尺度下降系数
+    alpha = 0.5
+    # 最小尺度
+    d_min = 0.01
+    # 每个尺度循环次数
+    run_times = 400
+    f = open('best.txt', 'a+')
+    print(f"参数配置：k={k}, alpha={alpha}, d_min={d_min}, run_times={run_times}", file=f)
+    centers, near_cen, dist = multiscale_diffusion_clustering(data, k, alpha, d_min, run_times)
     target_func = target_function(near_cen, dist)
-    print(f"F={target_func}, \ncenters={centers}, \nnear_cen={near_cen}, \ndist={dist}\n")
-    # random_change_class(centers, near_cen, dist)
+    print(f"F={target_func}, \ncenters={centers}, \nnear_cen={near_cen}, \ndist={dist}\n", file=f)
+    f.close()
     plt.figure()
     x = data['x']
     y = data['y']
-    # plt.subplot(2,1,1)
     plt.scatter(x, y, c=near_cen)
     plt.scatter(centers[:, 0], centers[:, 1], marker='x', s=500, c='r')
-    print(centers)
-    print(near_cen)
     plt.show()

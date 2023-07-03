@@ -72,7 +72,7 @@ def multiscale_diffusion_clustering(data, k, alpha, d_min, run_times):
             np.random.seed(seed)
             random_number = np.random.normal(0, 1, [len(centers), 2])
             # step 5：簇的扩散
-            new_centers = centers + d * random_number
+            new_centers = best_centers + d * random_number
             # print(f"random_number={random_number}, \nnew_centers={new_centers} , \nbest_centers={best_centers}")
             # step 6：计算比较浓度的变化
             new_near_cen, new_dist = near_center(data, new_centers)
@@ -85,7 +85,6 @@ def multiscale_diffusion_clustering(data, k, alpha, d_min, run_times):
                 best_near_cen = new_near_cen
                 best_dist = new_dist
         d = alpha * d
-        centers = best_centers
     return best_centers, best_near_cen, best_dist
 
 
@@ -97,9 +96,9 @@ if __name__ == '__main__':
     # 尺度下降系数
     alpha = 0.5
     # 最小尺度
-    d_min = 0.01
+    d_min = 0.1
     # 每个尺度循环次数
-    run_times = 400
+    run_times = 500
     f = open('best.txt', 'a+')
     print(f"参数配置：k={k}, alpha={alpha}, d_min={d_min}, run_times={run_times}", file=f)
     centers, near_cen, dist = multiscale_diffusion_clustering(data, k, alpha, d_min, run_times)
